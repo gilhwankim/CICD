@@ -1,1 +1,72 @@
+name: github-action-testWeb
 
+
+
+
+on:
+
+  push:
+
+    branches: [main]
+
+
+
+
+jobs: 
+
+  build: 
+
+    runs-on: ubuntu-20.04
+
+    steps:
+
+      - name: git clone
+
+        uses: actions/checkout@v2
+
+
+
+
+      - name: zip 생성
+
+        working-directory: ./
+
+        run: zip -qq -r $GITHUB_SHA.zip .
+
+        shell: bash
+
+
+
+
+      - name: AWS configure credentials
+
+        uses: aws-actions/configure-aws-credentials@v1
+
+        with:
+
+          aws-access-key-id: ${{ secrets.ACCESS_KEY }}
+
+          aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
+
+          aws-region: ap-northeast-1
+
+
+
+
+      - name: upload to S3
+
+        run: aws s3 cp --region ap-northeast-1 ./$GITHUB_SHA.zip s3://s3-gilhwan-codedeploy/$GITHUB_SHA.zip
+
+      
+
+      - name: deploy with AWS codeDeploy
+
+        run: aws deploy create-deployment
+
+          --application-name codedeploy-gilhwan
+
+          --deployment-config-name CodeDeployDefault.OneAtATime
+
+          --deployment-group-name codedeploy-gilhwan-group
+
+          --s3-location bucket=s3-gilhwan-codedeploy,bundleType=zip,key=$GITHUB_SHA.zip

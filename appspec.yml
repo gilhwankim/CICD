@@ -16,3 +16,5 @@ hooks:
     - location: scripts/after_deploy.sh
       timeout: 300
       runas: root
+sudo service apache2 stop
+sudo service apache2 start
